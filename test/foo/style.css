@@ -1,0 +1,15 @@
+.box {
+	border: 1px solid #000;
+	width: 100px;
+	height: 100px;
+}
+
+.small-box {
+	width: 50px;
+	height: 50px;
+}
+
+.large-box {
+	width: 150px;
+	height: 150px;
+}
