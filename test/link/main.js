@@ -143,6 +143,9 @@
 	});
 
 	new App();
-	new App();
-
+	var app = new App();
+	app.setSubView('lc2', new LinkComposite);
+	console.log(app.getSubView('lc2'));
+	app.delSubView('lc2');
+	console.log(app.getSubView('lc2'));
 })();

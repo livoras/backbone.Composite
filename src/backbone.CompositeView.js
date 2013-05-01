@@ -91,7 +91,7 @@
 
 		// removeSubView by id, 
 		// But for safety, you cannot remove subview's subview 
-		remove: function (id) {
+		delSubView: function (id) {
 			if (this.iv[id]) {
 				delete this.iv[id];
 				this.trigger('remove');
@@ -123,7 +123,7 @@
 			,	dot = -1
 			,	view
 			,	method
-			,	i, len;
+			,	i, len, j;
 
 			for (var i = 0, len = handlers.length; i < len; i++) {
 
@@ -143,8 +143,8 @@
 
 						if (Object.prototype.toString.apply(view) === '[object Array]') {
 
-							for (i = 0, len = view.length; i < len; i++) {
-								target.on(name, view[i][method], view[i]);
+							for (j = 0, len = view.length; j < len; j++) {
+								target.on(name, view[j][method], view[j]);
 							}
 
 							continue;

@@ -1,35 +1,68 @@
 (function () {
 	// test for `backbone.CompositeView.nestViews` 
 
-	var $body = $(document.body); 
+	var Dog = Backbone.View.extend({
 
-	var Foo = Backbone.CompositeView.extend({
-		itemViews: {
-			'link': function () {
-				$body.append('link');
-			}
+		park: function () {
+			// do stuff
+			console.log('Dog park');
+			this.trigger('park');
 		},
-		initialize: function () {
-			$body.append($('<div>foo</div>'));
+
+		run: function () {
+			// do stuff
+			console.log('Dog run');
+			this.trigger('run');
 		}
 	});
 
-	var Foo2 = Backbone.CompositeView.extend({
+	var Cat = Backbone.View.extend({
+		run: function () {
+			// do stuff
+			console.log('Cat run...');
+			this.trigger('run');
+		}
+	});
+
+	var People = Backbone.View.extend({
+		rage: function () {
+			// do stuff
+			console.log('People rage');
+			this.trigger('rage');
+		}
+	});
+
+	var House = Backbone.CompositeView.extend({
+
 		itemViews: {
-			'foo': function () { 
-				return new Foo;
+			'women': function () {
+				return new People;
 			},
-			'foo2': function () { 
-				return new Foo;
+
+			'cats': function () {
+				return [new Cat, new Cat, new Cat];
+			},
+
+			'dogs': function () {
+				return [new Dog, new Dog];
 			}
 		},
-		time: new Date(),
+
+		viewsEvents: {
+			'park dogs': ['cats.run', 'women.rage'],
+			'rage women': ['dogs.run', 'houseMessUp']
+		},
+
 		initialize: function () {
-			console.log(this.time);
+			this.getSubView('dogs')[0].park();
+		},
+
+		houseMessUp: function () {
+			console.log('House Mess Up');
 		}
+
 	});
 
-	new Foo2;
-	new Foo2;
+	new House;
 
 })();
