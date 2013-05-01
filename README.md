@@ -4,7 +4,8 @@
 
 * 使应用程序的整体视图关系达到一个树形结构，尽可能地降低视图的耦合性。
 * 充分利用事件机制，使不同视图之间的可以进行通信。
-* 批量处理视图 DOM 的添加，多对多事件的触发。
+* 批量处理视图 DOM 的添加
+* 多对多事件的触发。
 
 使用CompositeView的时机：
 
@@ -90,7 +91,7 @@ backbone.CompositeView 只要需要三个参数，三个方法。
         }
     }
 ```
-<code>subviewid</code>是你为该子视图所取唯一标识，<code>views</code>则是一个函数，返回一个 Backbone 视图对象
+<code>subviewid</code>是你为该子视图所设定的唯一标识，键值则是一个函数，返回一个 Backbone 视图对象
 或者存放视图对象的数组。
 
 ```javascript
@@ -161,11 +162,11 @@ backbone.CompositeView 只要需要三个参数，三个方法。
 ```
 
 其中<code>parent</code>可以是：
-* 组合视图的任意非数组子视图 id
+* 本组合视图的任意非数组子视图 id
 * jQuery选择器
 
 <code>child</code>可以为：
-* 组合视图中任意视图 id，包括数组
+* 本组合视图中任意视图 id，包括数组
 * 任意 Backbone 的视图实例
 * jQuery 对象
 * jQuery 选择器
@@ -203,7 +204,7 @@ backbone.CompositeView 只要需要三个参数，三个方法。
 1. 将`comments`这个id对应的数组子视图的三个`comment`的`$el`都添加到`container`这个id对应的视图的`$el`中
 2. 将`deleteBtn`对应的视图的`$el`添加到`container`
 3. 将`#sample`选择器获得的DOM元素添加到`container`
-4. 将`<li>item</li>元素插入`container`
+4. 将`<li>item</li>`元素插入`container`
 5. 然后最终将`container`添加到`body`元素中
 
 
@@ -347,10 +348,8 @@ House Mess Up // 房子乱成一团
 ```
 
 `dogs`是一个存放了两个`Dog`视图实例的数组，`cats`是放了三个`Cat`视图实例的数组，`women`是一个`People实例`。
-
 当`dogs`中任意一个视图触发了`park`事件，会使`cats`所有视图执行`run`方法，`women`执行`rage`方法。
-
-当`women`触发了`rage`事件，会使`dogs`中所有视图调用`run`方法，以及执行`house`的`houseMessUp`方法。
+当`women`触发了`rage`事件，会使`dogs`中所有视图调用`run`方法，以及执行`house`的`houseMessUp`方法和一个自定义的匿名方法。
 
 从上面的例子我们可以看出，我们的插件可以让一组或者一个子视图元素的事件监听一系列方法，
 这些方法可以是
