@@ -72,6 +72,10 @@
 			'rage women': ['dogs.run', 'houseMessUp']
 		},
 
+		initialize: function () {
+			this.appendSubView('cats', new Cat);
+		},
+
 		funny: function () {
 			this.getSubView('dogs')[0].park();
 		},
@@ -99,7 +103,5 @@
 	});
 
 	dog.park();
-
-	new Funny;
 
 })();
