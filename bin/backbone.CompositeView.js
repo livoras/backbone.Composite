@@ -428,6 +428,9 @@
 			} else {
 				throw "Subview is not an array";
 			}
+
+			this.trigger('append', id, view);
+			this.trigger('append:' + id, view);
 		},
 
 		// removeSubView by id, 
