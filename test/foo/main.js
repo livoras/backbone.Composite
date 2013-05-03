@@ -54,6 +54,9 @@
 		},
 
 		initialize: function () {
+		},
+
+		funny: function () {
 			this.getSubView('dogs')[0].park();
 		},
 
@@ -63,6 +66,9 @@
 
 	});
 
-	new House;
+	var house = new House;
+	var dog = new Dog;
+	house.appendSubView('dogs', dog, true, true);
+	dog.park();
 
 })();
