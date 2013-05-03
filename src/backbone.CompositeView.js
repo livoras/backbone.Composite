@@ -115,6 +115,20 @@
 		}
 	}
 
+	function _dynamicNesting (id, view) {
+		var parent = this.nv[id]
+		,	parentView;
+
+		if (parent === '') return;
+		parentView = this.getSubView(parent);
+
+		if (parentView) {
+			parentView.$el.append(view.$el);
+		} else {
+			$(parent).append(view.$el);
+		}
+	}
+
 
 	// init all SubView
 	function _initItemViews () {
@@ -125,6 +139,8 @@
 		for(i in itemViews) {
 			view = iv[i] = itemViews[i]; 
 			ve = this.ve[i] = {};
+			this.nv[i] = '';
+
 			ve['bind'] = {};
 			ve['listen'] = {};
 
@@ -186,15 +202,8 @@
 	// this fucntion will make it happen
 	function _nestAll () {
 		var nestViews = this.nestViews
-		,	view
-		,	parent
-		,	child
-		,	children 
-		,	len
-		,	$parent
-		,	$child  
-		,	$fragment
-		,	i, l;
+		,	view, parent, child, children, len
+		,	$parent, $child, $fragment, i, l;
 
 		for (parent in nestViews) {
 			$fragment = $();
@@ -255,6 +264,11 @@
 				} else if (typeof item === 'string') {
 
 					view = this.getSubView(item);
+
+					// for dynamicNesting 
+					if (view && item.indexOf('.') === -1) {
+						this.nv[item] = parent;
+					}
 
 					// You may attain an array from `getSubView`
 					if (_isArray(view)) {
@@ -324,6 +338,7 @@
 			// we need to creat its own itemView, that is iv
 			this.iv = {};
 			this.ve = {};
+			this.nv = {};
 			_initItemViews.apply(this);
 			_bindEvents.apply(this);
 			_nestAll.apply(this);
@@ -387,21 +402,17 @@
 		// append a new subview to a subview that is an array 
 		// You can chose to bind the events which already exists below the id's subview
 		// or not to by setting the optional `bind` argument to false 
-		appendSubView: function (id, view, bind, listen) {
+		appendSubView: function (id, view, opt) {
 			var views = this.getSubView(id)
-			,	isBind, isListen, listens;
+			,	isBind, isListen, listens, setting;
 
-			if (!(typeof bind === 'boolean')) {
-				isBind = true;
-			}  else {
-				isBind = bind;
-			}
+			setting = {
+				bind: true,
+				listen: true,
+				nest: true
+			};
 
-			if (!(typeof listen === 'boolean')) {
-				isListen = true;
-			}  else {
-				isListen = listen;
-			}
+			_.extend(setting, opt);
 
 			if (!views)	{
 				throw "subview not found";
@@ -410,8 +421,9 @@
 			if (_isArray(views)) {
 
 				views.push(view);
-				if (isBind) _dynamicBinding.call(this, id, view);
-				if (isListen) _dynamicListening.call(this, id, view);
+				if (setting.bind) _dynamicBinding.call(this, id, view);
+				if (setting.listen) _dynamicListening.call(this, id, view);
+				if (setting.nest) _dynamicNesting.call(this, id, view);
 
 			} else {
 				throw "Subview is not an array";

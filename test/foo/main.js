@@ -2,6 +2,7 @@
 	// test for `backbone.CompositeView.nestViews` 
 
 	var Dog = Backbone.View.extend({
+		className: 'dog',
 
 		park: function () {
 			// do stuff
@@ -17,6 +18,8 @@
 	});
 
 	var Cat = Backbone.View.extend({
+		className: 'cat',
+
 		run: function () {
 			// do stuff
 			console.log('Cat run...');
@@ -25,6 +28,8 @@
 	});
 
 	var People = Backbone.View.extend({
+		className: 'people',
+
 		rage: function () {
 			// do stuff
 			console.log('People rage');
@@ -32,7 +37,12 @@
 		}
 	});
 
-	var House = Backbone.CompositeView.extend({
+	var House = Backbone.View.extend({
+		tagName: 'div',
+		className: 'house'
+	});
+
+	var Funny = Backbone.CompositeView.extend({
 
 		itemViews: {
 			'women': function () {
@@ -45,15 +55,21 @@
 
 			'dogs': function () {
 				return [new Dog, new Dog];
+			},
+
+			'house': function () {
+				return new House;
 			}
+		},
+
+		nestViews: {
+			'body': ['house'],
+			'house': ['women', 'cats', 'dogs']
 		},
 
 		viewsEvents: {
 			'park dogs': ['cats.run', 'women.rage'],
 			'rage women': ['dogs.run', 'houseMessUp']
-		},
-
-		initialize: function () {
 		},
 
 		funny: function () {
@@ -66,9 +82,24 @@
 
 	});
 
-	var house = new House;
+	var funny = new Funny;
 	var dog = new Dog;
-	house.appendSubView('dogs', dog, true, true);
+
+	funny.appendSubView('dogs', dog, {
+		nest: true
+	});
+
+	funny.appendSubView('dogs', new Dog, {
+		nest: true,
+		bind: false
+	});
+
+	funny.appendSubView('cats', new Cat, {
+		listen: false
+	});
+
 	dog.park();
+
+	new Funny;
 
 })();
