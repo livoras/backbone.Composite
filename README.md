@@ -2,7 +2,7 @@
 
 这个插件致力于用组合模式更好地处理 backbone.js 中的视图关系。有下面几个特性：
 
-* 使应用程序的整体视图关系达到一个树形结构，尽可能地降低视图的耦合性。
+* 使应用程序的整体视图关系达到一个树形结构，尽可能地降低视图模块之间的耦合性。
 * 充分利用事件机制，使不同视图之间的可以进行通信。
 * 批量处理视图 DOM 的添加
 * 多对多事件的触发。
@@ -62,7 +62,7 @@ sv.setSubView('specialView', new Sub);
 详细用法请看 API
 
 ## API
-backbone.CompositeView 只要需要三个参数，三个方法。
+backbone.CompositeView 只要需要三个参数，四个方法。
 
 ### 参数 
 * itemViews
@@ -72,6 +72,7 @@ backbone.CompositeView 只要需要三个参数，三个方法。
 ### 方法
 * setSubView()
 * getSubView()
+* appendSubView()
 * delSubView()
 
 * * *
@@ -379,7 +380,7 @@ House Mess Up // 房子乱成一团
 ```
 
 * * *
-### getSubView(subViewId)
+### getSubView(subViewId:String)
 
 获取组合视图的子视图，支持`.`操作获取更底层的视图：
 ```javascript
@@ -390,7 +391,7 @@ app.getSubView('house.dogs'); // => [dog, dog, dog]
 若视图存不存在，返回`null`
 
 * * *
-### setSubView(subViewId, view)
+### setSubView(subViewId:String, view:Object)
 设置子视图，不支持`.`操作，也就说处于安全考虑，不可以让你设置后继子视图。
 ```javascript
 var app = new App();
@@ -399,13 +400,78 @@ app.setSubView('anotherHouse', new House);
 该方法会触发`get`和`get:subViewId`事件，如果是添加本身不存在的视图同时会触发`add`事件。
 
 * * *
-### delSubView(subViewId)
+### delSubView(subViewId:String)
 让你可以从实例中删除子视图，相应的DOM元素并不会删除。需要你手动删除。
 ```javascript
 var app = new App();
 app.delSubView('house');
 ```
 该方法会触发`delete`和`delete:subViewId`事件
+
+* * *
+### appendSubView(subViewId:String, view:Object [, options:Object])
+该方法可以往组合视图的数组形式子视图中添加元素，同时，你可以通过可选参数`options`来设置是否需要配置函数的行为。
+options的有三个可以设置的属性：`nest`，`bind`，`listen`，都是`Boolean`类型。实例用法（回忆我们`House`的例子）：
+```javascript
+ 	// 此处省略代码
+	
+	var House = Backbone.CompositeView.extend({
+
+		itemViews: {
+			'women': function () {
+				return new People;
+			},
+
+			'cats': function () {
+				return [new Cat, new Cat, new Cat];
+			},
+
+			'dogs': function () {
+				return [new Dog, new Dog];
+			}
+		},
+
+		viewsEvents: {
+			'park dogs': ['cats.run', 'women.rage'],
+			'rage women': ['dogs.run', 'houseMessUp', function () {console.log('~~~funny');}]
+		},
+
+		initialize: function () {
+			this.getSubView('dogs')[0].park();
+		},
+
+		houseMessUp: function () {
+			console.log('House Mess Up');
+		}
+
+	});
+	
+	var house = new House;
+	var dog = new Dog;
+	
+	house.appendSubView('dogs', dog, {
+		nest: true,
+		bind: true,
+		listen: true
+	});
+	
+	dog.park();
+```
+* `nest`：新增的视图是否也按照`nestViews`的规则进行 DOM 元素的插入。
+
+* `bind`：设置子视图的触发事件是否也按照`viewsEvents`的规则来执行一系列的函数。
+   如上面的`dog`的`park`事件的触发会导致`cats.run`，`women.rage`函数的执行。
+   如果你希望新插入的小`dog`不会吓跑`cats`，不会让`women`发怒。那么简单地设置`bind`为`false`即可。
+
+* `listen`：如果在`viewsEvents`的规则中，子视图监听了一些其他子视图的事件，那么你可以通过设置这个参数来规定
+   新插入的视图元素是否按照规则来继续监听其他子视图的事件。如我们的`dogs`是监听了`women`的`rage`事件的，一旦
+   `women`触发了`rage`事件，所有的`dogs`都会跑光光。如果你希望新插入的`dog`不会被`women`吓跑，那么简单设置`listen`
+   为`false`就可以。
+
+
+假如不传入参数`options`，那么三个属性默认都为`true`。
+
+该方法会触发`append`和`append:subViewId`事件
 
 ## Licence
 MIT
