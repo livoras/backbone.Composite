@@ -172,12 +172,10 @@
 			targetName = evtAndView.target;
 
 			views = this.getSubView(targetName);
-			if (targetName.indexOf('.') === -1) {
-				binds = this.ve[targetName]['bind'];
-			}
-
+			
 			// cache self's subview events
 			if (targetName.indexOf('.') === -1) {
+				binds = this.ve[targetName]['bind'];
 				binds[eventName] = handlers;
 			}
 
