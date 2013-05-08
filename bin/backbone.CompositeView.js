@@ -201,11 +201,16 @@
 	function _nestAll () {
 		var nestViews = this.nestViews
 		,	view, parent, child, children, len
-		,	$parent, $child, $fragment, i, l;
+		,	$parent, $child, $fragment, values 
+		,	parents, toFind, i, l, count = 0;
 
-		for (parent in nestViews) {
+		for (parents in nestViews) {
 			$fragment = $();
 			$child = null; 
+
+			values = parents.split(' ');
+			parent = values[0];
+			toFind = values[1] ? values[1] : null;
 
 			view = this.getSubView(parent);
 
@@ -225,16 +230,21 @@
 				// As to here, the view must be a Backbone.View 
 				$parent = view.$el;
 
+				if (toFind) {
+					$parent = $parent.find(toFind);
+				}
+
+
 			} else {
 
 				// if view is null, then we get parent
 				//  fron jQuery selector
-				$parent = $(parent);
+				$parent = $(parents);
 			}
 
 			if ($parent.size() < 1) continue; 
 
-			children = nestViews[parent]; 
+			children = nestViews[parents]; 
 
 			if (typeof children === 'function') children = children();
 

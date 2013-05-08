@@ -3,6 +3,7 @@
 	// test for `backbone.CompositeView.viewsEvents` 
 
 	var $body = $(document.body); 
+	$body.append("<div id='wrapper'></div>");
 
 	var Link = Backbone.View.extend({
 
@@ -40,6 +41,10 @@
 
 		className: 'box',
 
+		initialize: function () {
+			this.$el.append('<div id="fuck"></div>');
+		},
+
 		say: function () {
 			alert('LinkWrapper says: I say~!');
 		}
@@ -72,7 +77,7 @@
 
 		nestViews: {
 
-			'wrapper1': function () {
+			'wrapper1 div#fuck': function () {
 				return ['links1', '<a href="#">jQuery Selector Test</a>', $('<a href="#">22</a>')];
 			},
 
@@ -80,7 +85,7 @@
 				return ['links2'];
 			},
 
-			'body': function () {
+			'body #wrapper': function () {
 				return ['wrapper1', 'wrapper2'];
 			}
 		},
@@ -108,7 +113,7 @@
 
 		render: function () {
 			this.$el.append('button');
-			$body.append(this.$el);
+			$('#wrapper').append(this.$el);
 		},
 
 		remove: function () {
