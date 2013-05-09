@@ -116,17 +116,28 @@
 	}
 
 	function _dynamicNesting (id, view) {
-		var parent = this.nv[id]
-		,	parentView;
+		var parent = this.nv[id], $parent
+		,	parentView, viewsInfo;
 
 		if (parent === '') return;
-		parentView = this.getSubView(parent);
+		else {
+			viewsInfo = parent.split(' ');
+		}
+
+		parentView = this.getSubView(viewsInfo[0]);
 
 		if (parentView) {
-			parentView.$el.append(view.$el);
+			$parent = parentView.$el;
+
+			if (viewsInfo[1]) {
+				$parent = $parent.find(viewsInfo[1]);
+			}
+
 		} else {
-			$(parent).append(view.$el);
+			$parent = $(parent);
 		}
+
+		$parent.append(view.$el);
 	}
 
 
@@ -275,7 +286,7 @@
 
 					// for dynamicNesting 
 					if (view && item.indexOf('.') === -1) {
-						this.nv[item] = parent;
+						this.nv[item] = parents;
 					}
 
 					// You may attain an array from `getSubView`
