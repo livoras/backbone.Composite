@@ -189,7 +189,7 @@ backbone.CompositeView 只要需要三个参数，四个方法。
         
         nestViews: {
             // 视图id     数组视图id    视图id    jQuery选择器   jQuery对象
-            'container': ['comments', 'deleteBtn', '#sample', $('<li>item</li>')],
+            'container ul': ['comments', 'deleteBtn', '#sample', $('<li>item</li>')],
             
             // 选择器   视图id
             'body':     ['container']
@@ -203,12 +203,13 @@ backbone.CompositeView 只要需要三个参数，四个方法。
 
 上面的<code>CommentWrapper</code>在实例化的时候，会执行:
 
-1. 将`comments`这个id对应的数组子视图的三个`comment`的`$el`都添加到`container`这个id对应的视图的`$el`中
+1. 将`comments`这个id对应的数组子视图的三个`comment`的`$el`都添加到`container`这个id对应的视图的DOM元素的子元素'ul'中。
 2. 将`deleteBtn`对应的视图的`$el`添加到`container`
 3. 将`#sample`选择器获得的DOM元素添加到`container`
 4. 将`<li>item</li>`元素插入`container`
 5. 然后最终将`container`添加到`body`元素中
 
+使用如果parent为“subviewid selector”，那么就相当于向该子视图的`$el.find(selector)`的元素中进行`append`操作。
 
 假如你的子视图也是一个组合视图，你想往子视图的子视图中添加元素应该怎么做呢？插件提供强大的“点”操作，
 你可以通过`subviewId.subviewId`来获取视图后继视图。继续上面的代码：
