@@ -209,7 +209,7 @@ backbone.CompositeView 只要需要三个参数，四个方法。
 4. 将`<li>item</li>`元素插入`container`
 5. 然后最终将`container`添加到`body`元素中
 
-使用如果parent为“subviewid selector”，那么就相当于向该子视图的`$el.find(selector)`的元素中进行`append`操作。
+如果parent为`subviewid selector`，那么就相当于向该`subviewid`对应的子视图的子DOM元素，相当于`$el.find(selector)`，进行`append`操作。
 
 假如你的子视图也是一个组合视图，你想往子视图的子视图中添加元素应该怎么做呢？插件提供强大的“点”操作，
 你可以通过`subviewId.subviewId`来获取视图后继视图。继续上面的代码：
