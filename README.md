@@ -1,4 +1,4 @@
-# backbone.CompositeView
+# backbone.Composite
 
 这个插件致力于用组合模式更好地处理 backbone.js 中的视图关系。有下面几个特性：
 
@@ -8,7 +8,7 @@
 * 多对多事件的触发。
 * 动态事件自动绑定。
 
-使用CompositeView的时机：
+使用Composite的时机：
 
 如果你发现自己需要在一个视图中用到另外一个视图，那么请考虑用组合视图，把那两个视图组合起来，而不是在一个视图的实现中参杂另外一个视图。
 
@@ -22,17 +22,17 @@
 <script src='jquery.js'></script>
 <script src='underscore.js'></script>
 <script src='backbone.js'></script>
-<script src='backbone.CompositeView.js'></script>
+<script src='backbone.Composite.js'></script>
 ```
 
 ### 基本用法
 
 ```javascript
 
-var SomeView = Backbone.CompositeView.extend({
+var SomeView = Backbone.Composite.extend({
 
         // 设置该组合视图用到的子视图
-        itemViews: {
+        items: {
 			'container': function () {
 				return new Container;
 			},
@@ -43,63 +43,65 @@ var SomeView = Backbone.CompositeView.extend({
 		},
 
         // 设置视图的包含关系
-		nestViews: {
+		nests: {
 			'container': 'subviews'
 		},
 
         // 处理视图间的事件
-		viewsEvents: {
+		events: {
 			'remove subviews': 'container.resize'
 		}
 		
 });
 
 var sv = new SomeView;
-sv.getSubView('container');
-sv.setSubView('specialView', new Sub);
+sv.getItem('container');
+sv.setItem('specialView', new Sub);
 
 ````
 
 详细用法请看 API
 
 ## API
-backbone.CompositeView 只要需要三个参数，四个方法。
+使用 backbone.Composite 要需要五个参数，四个方法。
 
 ### 参数 
-* itemViews
-* nestViews
-* viewsEvents
+* items
+* nests
+* events
+* exportAPI
+* exportEvent
 
 ### 方法
-* setSubView()
-* getSubView()
-* appendSubView()
-* delSubView()
+* setItem()
+* getItem()
+* pushItem()
+* deleteItem()
 
 * * *
 
-### itemViews
+### items
 
 这个对象声明了该组合视图需要用到的子视图，它是树形结构的关键，在定义一个组合视图类时传入。格式为：
 ```javascript
-    itemViews: {
+    items: {
         
-        subviewId1: function () {
+        itemId1: function () {
             return view;
         },
         
-        subviewId2: function () {
+        itemId2: function () {
             return [view, view, view,....];
         }
     }
 ```
-<code>subviewid</code>是你为该子视图所设定的唯一标识，键值则是一个函数，返回一个 Backbone 视图对象
+<code>itemId</code>是你为该子视图所设定的唯一标识，键值则是一个函数，返回一个 Backbone 视图对象
 或者存放视图对象的数组。
 
 ```javascript
-    var CommentWrapper = Backbone.CompositeView.extend({
+    var CommentWrapper = Backbone.Composite.extend({
 
-		itemViews: {
+		items: {
 
 			// 设置 `deleteBtn` 这个 id 对应的是一个 Button 视图实例
 			'deleteBtn': function () {
@@ -122,9 +124,9 @@ backbone.CompositeView 只要需要三个参数，四个方法。
 也许你会疑惑为什么要用函数作为键值，为什么我们不直接这样：
 
 ```javascript
-    var CommentWrapper = Backbone.CompositeView.extend({
+    var CommentWrapper = Backbone.Composite.extend({
 
-    	itemViews: {
+    	items: {
 		
 			'deleteBtn':  new Button,
 		
@@ -149,13 +151,13 @@ backbone.CompositeView 只要需要三个参数，四个方法。
 
 * * *
 
-### nestViews
+### nests
 
 这个参数处理视图的 DOM 元素之间的父子节点关系，接受数组或者返回数组的函数作为键值，
 格式为：
 
 ```javascript
-    nestViews: {
+    nests: {
         parent: [child, child, child,...],
         parent: function () {
             return [child, child, child,....];
@@ -176,9 +178,9 @@ backbone.CompositeView 只要需要三个参数，四个方法。
 当实例化一个组合视图的时候，插件会自动将数组中所有的 <code>child</code> 添加到 <code>parent</code> 的 DOM 结构中。
 
 ```javascript
-    var CommentWrapper = Backbone.CompositeView.extend({
+    var CommentWrapper = Backbone.Composite.extend({
 
-        itemViews: {
+        items: {
 		
 			'deleteBtn':  function () { return new Button; },
 		
@@ -187,9 +189,9 @@ backbone.CompositeView 只要需要三个参数，四个方法。
             'containier': function () {return new Container;}
 		},
         
-        nestViews: {
+        nests: {
             // 视图id     数组视图id    视图id    jQuery选择器   jQuery对象
-            'container': ['comments', 'deleteBtn', '#sample', $('<li>item</li>')],
+            'container ul': ['comments', 'deleteBtn', '#sample', $('<li>item</li>')],
             
             // 选择器   视图id
             'body':     ['container']
@@ -203,25 +205,26 @@ backbone.CompositeView 只要需要三个参数，四个方法。
 
 上面的<code>CommentWrapper</code>在实例化的时候，会执行:
 
-1. 将`comments`这个id对应的数组子视图的三个`comment`的`$el`都添加到`container`这个id对应的视图的`$el`中
+1. 将`comments`这个id对应的数组子视图的三个`comment`的`$el`都添加到`container`这个id对应的视图的DOM元素的子元素'ul'中。
 2. 将`deleteBtn`对应的视图的`$el`添加到`container`
 3. 将`#sample`选择器获得的DOM元素添加到`container`
 4. 将`<li>item</li>`元素插入`container`
 5. 然后最终将`container`添加到`body`元素中
 
+如果parent为`itemId selector`，那么就相当于向该`itemId`对应的子视图的子DOM元素，相当于`$el.find(selector)`，进行`append`操作。
 
 假如你的子视图也是一个组合视图，你想往子视图的子视图中添加元素应该怎么做呢？插件提供强大的“点”操作，
-你可以通过`subviewId.subviewId`来获取视图后继视图。继续上面的代码：
+你可以通过`itemId.itemId`来获取视图后继视图。继续上面的代码：
 
 ```javascript
     var App = Backbone.CompositeView.extend({
         
-        itemViews: {
+        items: {
             // wrapper 对应的视图也是一个组合视图，也就是上面的 CommentWrapper
             'wrapper': function () {return new CommentWrapper;}
         },
         
-        nestView: {
+        nests {
             // 往 wrapper 这个子视图的子视图 container 插入两个 Comment
             'wrapper.container': [new Comment, new Comment]
         }
@@ -231,12 +234,12 @@ backbone.CompositeView 只要需要三个参数，四个方法。
     new App;
 ```
 
-理论上你可以通过`.`无限获取组合视图的子视图，`subviewId.subviewId.subviewId....`。
+理论上你可以通过`.`无限获取组合视图的子视图，`itemId.itemId.itemId.itemId....`。
 当然，所有的点操作都应该是在你给视图所标识的id上进行。
 
 * * *
 
-### viewsEvents
+### events
 
 视图之间都是通过事件来进行消息的传递的，
 插件提供了良好的事件处理机制，
@@ -244,18 +247,18 @@ backbone.CompositeView 只要需要三个参数，四个方法。
 
 格式为：
 ```javascript
-    viewsEvents: {
-        'eventName subviewId': [handler, hander, handler,...],
-        'eventName subviewId': function () {
+    events: {
+        'eventName itemId': [handler, hander, handler,...],
+        'eventName itemId': function () {
             return [handler, hander, handler,...];
         }
     }
 ```
 1. `eventName`为事件的名称，
-2. `subviewId`为触发事件子视图的id
+2. `itemId`为触发事件子视图的id
 3. `handler`可以是一个字符串，也可以是一个函数。如果是字符串，则可能绑定组合视图本身或者组合视图子视图的事件，
    根据是否有`.`操作来判断。
-4. 当实例化的时候，会把数组中所有的函数绑定到`subviewId`对应视图的`eventName`事件下。
+4. 当实例化的时候，会把数组中所有的函数绑定到`itemId`对应视图的`eventName`事件下。
 
 参考例子：
 ```javascript
@@ -290,9 +293,9 @@ backbone.CompositeView 只要需要三个参数，四个方法。
 		}
 	});
 
-	var House = Backbone.CompositeView.extend({
+	var House = Backbone.Composite.extend({
 
-		itemViews: {
+		items: {
 			'women': function () {
 				return new People;
 			},
@@ -306,7 +309,7 @@ backbone.CompositeView 只要需要三个参数，四个方法。
 			}
 		},
 
-		viewsEvents: {
+		events: {
 			'park dogs': ['cats.run', 'women.rage'],
 			'rage women': ['dogs.run', 'houseMessUp', function () {console.log('~~~funny');}]
 		},
@@ -341,9 +344,9 @@ House Mess Up // 房子乱成一团
 ~~~~funny // 好好玩不是么？
 ```
 
-我们代码中的`viewsEvents`就通过事件达到了这种效果
+我们代码中的`events`就通过事件达到了这种效果
 ```javascript
-    viewsEvents: {
+    events: {
 		'park dogs': ['cats.run', 'women.rage'],
 		'rage women': ['dogs.run', 'houseMessUp', function () {console.log('~~~funny');}]
 	},
@@ -368,11 +371,11 @@ House Mess Up // 房子乱成一团
 在其中可以监听`Houese`中的`dogs`的`park`事件：
 ```javascript
 
-    var App = Backbone.CompositeView.extend({
-        itemViews: {
+    var App = Backbone.Composite.extend({
+        items: {
             'house': function () {return new House;}
         },
-        viewsEvents: {
+        events: {
     	    'park house.dogs': [function () {}...]
 	    }
     });
@@ -381,44 +384,121 @@ House Mess Up // 房子乱成一团
 ```
 
 * * *
-### getSubView(subViewId:String)
+### exportAPI
+
+设置该属性可以把item的方法暴露为自己的方法：
+
+格式为：
+```javascript
+exportAPI: {
+	'itemId': ['method1','method2',....]
+}
+```
+
+给出一个栗子：
+```javascript
+var Box = Backbone.View.extend({
+	name: 'Hi',
+	sayName: function () {
+		console.log(this.name);	
+	}
+});
+
+var BoxWrapper = Backbone.Composite.extend({
+	items: {
+		'box': function () {
+			return new Box;
+		}
+	},
+	exportAPI: {
+		'box': ['sayName']
+	}
+});
+
+var boxWrapper = new BoxWrapper;
+boxWrapper.sayName(); // => Hi
+```
+如上面的代码，`sayHi`函数属于`Box`的方法，但是我们想把它暴露出去作为组合视图的方法，那么就可以用`exportAPI`。
+
+
+* * *
+### exportEvent
+设置该属性可以把item的事件暴露为自己的事件
+
+格式为：
+```javascript
+exportEvent: {
+	'itemId': ['Event1','Event2',....]
+}
+```
+
+给出一个栗子：
+```javascript
+var Box = Backbone.View.extend({
+	name: 'Hi',
+	sayName: function () {
+		this.trigger('nameSay', this.name);
+	}
+});
+
+var BoxWrapper = Backbone.Composite.extend({
+	items: {
+		'box': function () {
+			return new Box;
+		}
+	},
+	exportEvent: {
+		'box': ['nameSay']
+	}
+});
+
+var boxWrapper = new BoxWrapper;
+boxWrapper.on('nameSay', function (name) {
+	console.log('I have got ' + name + ' said');
+});
+boxWrapper.getItem('box').sayName(); // => I have got Hi said
+```
+如上面的代码，`nameSay`函数属于`Box`的事件，但是我们想把它暴露出去作为组合视图的事件，那么就可以用`exportEvent`。
+
+* * *
+### getItem(itemId:String)
 
 获取组合视图的子视图，支持`.`操作获取更底层的视图：
 ```javascript
 var app = new App();
-app.getSubView('house'); // => new House
-app.getSubView('house.dogs'); // => [dog, dog, dog]
+app.getItem('house'); // => new House
+app.getItem('house.dogs'); // => [dog, dog, dog]
 ```
 若视图存不存在，返回`null`
 
 * * *
-### setSubView(subViewId:String, view:Object)
+### setItem(itemId:String, view:Object)
 设置子视图，不支持`.`操作，也就说处于安全考虑，不可以让你设置后继子视图。
 ```javascript
 var app = new App();
-app.setSubView('anotherHouse', new House);
+app.setItem('anotherHouse', new House);
 ```
-该方法会触发`get`和`get:subViewId`事件，如果是添加本身不存在的视图同时会触发`add`事件。
+该方法会触发`get`和`get:itemId`事件，如果是添加本身不存在的视图同时会触发`add`事件。
 
 * * *
-### delSubView(subViewId:String)
+### deleteItem(itemId:String)
 让你可以从实例中删除子视图，相应的DOM元素并不会删除。需要你手动删除。
 ```javascript
 var app = new App();
-app.delSubView('house');
+app.deleteItem('house');
 ```
-该方法会触发`delete`和`delete:subViewId`事件
+该方法会触发`delete`和`delete:ItemId`事件
 
 * * *
-### appendSubView(subViewId:String, view:Object [, options:Object])
+### pushItem(itemId:String, view:Object [, options:Object])
 该方法可以往组合视图的数组形式子视图中添加元素，同时，你可以通过可选参数`options`来设置是否需要配置函数的行为。
 options的有三个可以设置的属性：`nest`，`bind`，`listen`，都是`Boolean`类型。实例用法（回忆我们`House`的例子）：
 ```javascript
  	// 此处省略代码
 	
-	var House = Backbone.CompositeView.extend({
+	var House = Backbone.Composite.extend({
 
-		itemViews: {
+		items: {
 			'women': function () {
 				return new People;
 			},
@@ -432,7 +512,7 @@ options的有三个可以设置的属性：`nest`，`bind`，`listen`，都是`B
 			}
 		},
 
-		viewsEvents: {
+		events: {
 			'park dogs': ['cats.run', 'women.rage'],
 			'rage women': ['dogs.run', 'houseMessUp', function () {console.log('~~~funny');}]
 		},
@@ -450,15 +530,16 @@ options的有三个可以设置的属性：`nest`，`bind`，`listen`，都是`B
 	var house = new House;
 	var dog = new Dog;
 	
-	house.appendSubView('dogs', dog, {
+	house.pushItem('dogs', dog, {
 		nest: true,
 		bind: true,
-		listen: true
+		listen: true,
+		prepend: false
 	});
 	
 	dog.park();
 ```
-* `nest`：新增的视图是否也按照`nestViews`的规则进行 DOM 元素的插入。
+* `nest`：新增的视图是否也按照`nests`的规则进行 DOM 元素的插入。
 
 * `bind`：设置子视图的触发事件是否也按照`viewsEvents`的规则来执行一系列的函数。
    如上面的`dog`的`park`事件的触发会导致`cats.run`，`women.rage`函数的执行。
@@ -469,10 +550,11 @@ options的有三个可以设置的属性：`nest`，`bind`，`listen`，都是`B
    `women`触发了`rage`事件，所有的`dogs`都会跑光光。如果你希望新插入的`dog`不会被`women`吓跑，那么简单设置`listen`
    为`false`就可以。
 
+* `prepend`：默认是false，当插入 DOM 的时候是以`$el.append`方式插入；如果设置为true，那么就以`$el.prepend`方式插入DOM
 
-假如不传入参数`options`，那么三个属性默认都为`true`。
+假如不传入参数`options`，那么前三个属性默认都为`true`，后面一个默认为`false`
 
-该方法会触发`append`和`append:subViewId`事件
+该方法会触发`push`，`push:itemId`事件
 
 ## Licence
 MIT
