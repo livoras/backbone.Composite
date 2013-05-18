@@ -1,4 +1,4 @@
-# backbone.Composite（文档已过时！！）
+# backbone.Composite
 
 这个插件致力于用组合模式更好地处理 backbone.js 中的视图关系。有下面几个特性：
 
