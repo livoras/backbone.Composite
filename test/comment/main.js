@@ -1,5 +1,5 @@
 (function () {
-	// test for `backbone.CompositeView.viewsEvents` 
+	// test for `backbone.Composite.events` 
 
 	var $body = $(document.body); 
 
@@ -40,9 +40,9 @@
 
 	});
 
-	var CommentWrapper = Backbone.CompositeView.extend({
+	var CommentWrapper = Backbone.Composite.extend({
 
-		itemViews: {
+		items: {
 			'comment': function () {
 				return new Comment;
 			},
@@ -51,7 +51,7 @@
 			}
 		},
 
-		viewsEvents: {
+		events: {
 
 			// * listen subview button's click event 
 			// => use string
@@ -64,25 +64,25 @@
 			}]
 		},
 
-		nestViews: {
+		nests: {
 			'comment': ['button'],
 			'body': ['comment'],
 		},
 
 		removeComment: function () {
-			this.getSubView('comment').remove();
+			this.getItem('comment').remove();
 		}
 
 	});
 
-	var App = Backbone.CompositeView.extend({
+	var App = Backbone.Composite.extend({
 
-		itemViews: {
+		items: {
 			'wrapper': new CommentWrapper,
 			'wrapper2': new CommentWrapper
 		},
 
-		viewsEvents: {
+		events: {
 			// * listen subview(wrapper)'s subview(comment)'s remove event 
 			// => subview's subview
 			'remove wrapper.comment': ['say']

@@ -18,14 +18,14 @@
 	});
 
 
-	var BoxManager = Backbone.CompositeView.extend({
+	var BoxManager = Backbone.Composite.extend({
 
-		itemViews: {
+		items: {
 			'largeBox': new BigBox(),
 			'smallBox': new SmallBox()
 		},
 
-		nestViews: {
+		nests: {
 
 			// * viewid  * Selector * jQuery Object 
 			'largeBox': ['smallBox', '<div class="box small-box">test</div>', $('<div>Foo</div>')],

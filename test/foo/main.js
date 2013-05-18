@@ -1,5 +1,5 @@
 (function () {
-	// test for `backbone.CompositeView.nestViews` 
+	// test for `backbone.Composite.nestViews` 
 
 	var Dog = Backbone.View.extend({
 		className: 'dog',
@@ -16,6 +16,22 @@
 			this.trigger('run');
 		}
 	});
+
+	var DogMod = Backbone.Model.extend({
+		defaults: {
+			test: 'khhhshhh'
+		}
+	});
+
+	var DogCol = Backbone.Collection.extend({
+		url: '/',
+		model: DogMod
+	});
+
+	var dogCol  = new DogCol;
+
+	dogCol.add(new DogMod({test: 'youllll'}));
+	console.log(dogCol.pluck('test'));
 
 	var Cat = Backbone.View.extend({
 		className: 'cat',
@@ -42,9 +58,9 @@
 		className: 'house'
 	});
 
-	var Funny = Backbone.CompositeView.extend({
+	var Funny = Backbone.Composite.extend({
 
-		itemViews: {
+		items: {
 			'women': function () {
 				return new People;
 			},
@@ -62,22 +78,22 @@
 			}
 		},
 
-		nestViews: {
+		nests: {
 			'body': ['house'],
 			'house': ['women', 'cats', 'dogs']
 		},
 
-		viewsEvents: {
+		events: {
 			'park dogs': ['cats.run', 'women.rage'],
 			'rage women': ['dogs.run', 'houseMessUp']
 		},
 
 		initialize: function () {
-			this.appendSubView('cats', new Cat);
+			this.pushItem('cats', new Cat);
 		},
 
 		funny: function () {
-			this.getSubView('dogs')[0].park();
+			this.getItem('dogs')[0].park();
 		},
 
 		houseMessUp: function () {
@@ -89,16 +105,16 @@
 	var funny = new Funny;
 	var dog = new Dog;
 
-	funny.appendSubView('dogs', dog, {
+	funny.pushItem('dogs', dog, {
 		nest: true
 	});
 
-	funny.appendSubView('dogs', new Dog, {
+	funny.pushItem('dogs', new Dog, {
 		nest: true,
 		bind: false
 	});
 
-	funny.appendSubView('cats', new Cat, {
+	funny.pushItem('cats', new Cat, {
 		listen: false
 	});
 

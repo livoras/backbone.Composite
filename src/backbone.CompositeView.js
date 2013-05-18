@@ -39,7 +39,7 @@
 
 					method = handler.slice(dot + 1);
 					id = handler.slice(0, dot);
-					view = this.getSubView(id);
+					view = this.getItem(id);
 
 					if (_isArray(view)) {
 
@@ -110,12 +110,12 @@
 
 		for (method in listens) {
 			evt = listens[method].split(' ');
-			targets = this.getSubView(evt[1]);
+			targets = this.getItem(evt[1]);
 			_universalBinding(targets, evt[0], [view[method]]);
 		}
 	}
 
-	function _dynamicNesting (id, view) {
+	function _dynamicNesting (id, view, prepend) {
 		var parent = this.nv[id], $parent
 		,	parentView, viewsInfo;
 
@@ -124,7 +124,7 @@
 			viewsInfo = parent.split(' ');
 		}
 
-		parentView = this.getSubView(viewsInfo[0]);
+		parentView = this.getItem(viewsInfo[0]);
 
 		if (parentView) {
 			$parent = parentView.$el;
@@ -137,7 +137,11 @@
 			$parent = $(parent);
 		}
 
-		$parent.append(view.$el);
+		if (prepend) {
+			$parent.prepend(view.$el);
+		} else {
+			$parent.append(view.$el);
+		}
 	}
 
 
@@ -145,7 +149,8 @@
 	function _initItemViews () {
 		var itemViews = this.itemViews
 		,	iv = this.iv
-		,	i, view, ve;
+		,	i, view 
+		,	ve, apis, events;
 
 		for(i in itemViews) {
 			view = iv[i] = itemViews[i]; 
@@ -157,8 +162,17 @@
 
 			// User May be set it as a function which returns an array
 			if (typeof view === 'function') {
-				iv[i] = view();
+				view = iv[i] = view();
 			}
+
+			apis = this.exportAPI[i];
+			events = this.exportEvent[i];
+
+			if (view) {
+				if(apis) _exportAPI.call(this, view, apis);
+				if(events) _exportEvent.call(this, view, events);
+			}
+
 		} 
 	}
 
@@ -182,7 +196,7 @@
 			eventName = evtAndView.event;
 			targetName = evtAndView.target;
 
-			views = this.getSubView(targetName);
+			views = this.getItem(targetName);
 			
 			// cache self's subview events
 			if (targetName.indexOf('.') === -1) {
@@ -223,10 +237,10 @@
 			parent = values[0];
 			toFind = values[1] ? values[1] : null;
 
-			view = this.getSubView(parent);
+			view = this.getItem(parent);
 
 			// Because you can get parent node from view's id 
-			// of this CompositeView, you might get an array 
+			// of this Composite, you might get an array 
 			// contains views object. When it accurs, we have no reason
 			// to appen every nodes to every views. So we will append nodes
 			// to the first view of the array (if it really got an array).
@@ -282,14 +296,14 @@
 				// or a jQuery Selector
 				} else if (typeof item === 'string') {
 
-					view = this.getSubView(item);
+					view = this.getItem(item);
 
 					// for dynamicNesting 
 					if (view && item.indexOf('.') === -1) {
 						this.nv[item] = parents;
 					}
 
-					// You may attain an array from `getSubView`
+					// You may attain an array from `getItem`
 					if (_isArray(view)) {
 
 						for (i = 0, l = view.length; i < l; i++) {
@@ -317,17 +331,68 @@
 		}
 	}
 
+	// exports subviews or object's API
+	function _exportAPI (item, apis) {
+		var method, i, len, api;
 
-	Backbone.CompositeView = Backbone.View.extend({
+		if (typeof item === 'string') {
+			item = this.getItem(item);
+			if (!!!item) {
+				throw Error("item " + item + " not found");
+			}
+		}
 
-		itemViews: {
+		for (var i = 0, len = apis.length; i < len; i++) {
+			method = apis[i]; 
+			api = item[method];
+
+			if (!!!api) {
+				throw new Error("API " + method + " not found");
+			} else {
+				// use to closure to make it work
+				this[method] = (function (api) {
+					return function () {
+						api.apply(item, arguments);
+					}
+				})(api);
+			}
+		}
+	};
+
+	function _exportEvent (item, events) {
+		var i, len, that;
+
+		if (typeof item === 'string') {
+			item = this.getItem(item);
+			if (!!!item) {
+				throw Error("item " + item + " not found");
+			}
+		}
+
+		for (var i = 0, len = events.length; i < len; i++) {
+			that = this;
+
+			function getRealCallBack(eventName) {
+				return function () {
+					Array.prototype.unshift.call(arguments, eventName);
+					that.trigger.apply(that, arguments);
+				}
+			}
+
+			this.listenTo(item, events[i], getRealCallBack(events[i]));
+		}
+	}
+
+	Backbone.Composite = Backbone.View.extend({
+
+		items: {
 
 			// 'id': view
 			// 'id': [view, view, view]
 			// 'id': function () {return [...];};
 		},
 
-		viewsEvents: {
+		events: {
 			// 'eventName view.subview': [handler, handler, handler]
 			// 'eventName view.subview': function () {retun []} ;
 
@@ -337,7 +402,7 @@
 			// if the subviews is array, it also works
 		},
 
-		nestViews: {
+		nests: {
 			// subview or selector: [subview, selector, $obj....] => array 
 			// subview or selector:  function which return array like above => function
 
@@ -350,14 +415,30 @@
 			// to certain subview or DOM 
 		},
 
+		exportAPI: {
+			// itemId: [api1, api2, api2]
+		},
+
+		exportEvent: {
+			// itemId: [event1, event2, event3]
+		},
+
 		constructor: function (opt) {
 			// It spends my hold day to deal with this....  
 			//  use iv to cache the insitance's itemViews  
-			// itemViews belongs to prototye, so for every CompositeView
+			// itemViews belongs to prototye, so for every Composite
 			// we need to creat its own itemView, that is iv
 			this.iv = {};
 			this.ve = {};
 			this.nv = {};
+
+			// dirty code,
+			// I want to change the params' name, but it's difficult
+			// so I hold the old names inside, but export new names to clients
+			this.itemViews = this.items;
+			this.viewsEvents = this.events;
+			this.nestViews = this.nests;
+
 			_initItemViews.apply(this);
 			_bindEvents.apply(this);
 			_nestAll.apply(this);
@@ -368,7 +449,7 @@
 		// It cannot set subview's subview
 		// You can chose to bind the events which already exists below the id's subview
 		// or not to by setting the optional `bind` argument to false 
-		setSubView: function (id, view, bind) {
+		setItem: function (id, view, bind) {
 			var	bind = bind || true;
 
 			this.trigger('set', id, view);
@@ -386,9 +467,9 @@
 			}
 		},
 
-		// getSubView('subviewId.subviewId.subviewId') to get child view 
+		// getItem('subviewId.subviewId.subviewId') to get child view 
 		// or subview's subviews
-		getSubView: function (id) {
+		getItem: function (id) {
 			var subId
 			,	superId
 			,	firstDot; 
@@ -409,8 +490,8 @@
 				if (!superView) {
 					return null;
 				} else {
-					if (typeof superView.getSubView === 'function') {
-						return superView.getSubView(subId);
+					if (typeof superView.getItem === 'function') {
+						return superView.getItem(subId);
 					} else {
 						return superView;
 					}
@@ -421,14 +502,15 @@
 		// append a new subview to a subview that is an array 
 		// You can chose to bind the events which already exists below the id's subview
 		// or not to by setting the optional `bind` argument to false 
-		appendSubView: function (id, view, opt) {
-			var views = this.getSubView(id)
+		pushItem: function (id, view, opt) {
+			var views = this.getItem(id)
 			,	isBind, isListen, listens, setting;
 
 			setting = {
 				bind: true,
 				listen: true,
-				nest: true
+				nest: true,
+				prepend: false
 			};
 
 			_.extend(setting, opt);
@@ -442,7 +524,7 @@
 				views.push(view);
 				if (setting.bind) _dynamicBinding.call(this, id, view);
 				if (setting.listen) _dynamicListening.call(this, id, view);
-				if (setting.nest) _dynamicNesting.call(this, id, view);
+				if (setting.nest) _dynamicNesting.call(this, id, view, setting.prepend);
 
 			} else {
 				throw "Subview is not an array";
@@ -454,7 +536,7 @@
 
 		// removeSubView by id, 
 		// But for safety, you cannot remove subview's subview 
-		delSubView: function (id) {
+		deleteItem: function (id) {
 			if (this.iv[id]) {
 				delete this.iv[id];
 				if (this.ve[id]) delete this.ve[id];
@@ -464,7 +546,13 @@
 			} else {
 				return false;
 			}
-		}
+		},
+
+		// exports subviews or object's API
+		_exportAPI: _exportAPI,
+
+		// exports subitems or object's Event
+		_exportEvent: _exportEvent
 
 	});
 

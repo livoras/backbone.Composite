@@ -51,11 +51,11 @@
 
 	}); 
 
-	var LinkComposite = Backbone.CompositeView.extend({
+	var LinkComposite = Backbone.Composite.extend({
 
 		initialize: function () {},
 
-		itemViews: {
+		items: {
 
 			'wrapper1': function() {
 				 return new LinkWrapper;
@@ -75,7 +75,7 @@
 
 		},
 
-		nestViews: {
+		nests: {
 
 			'wrapper1 div#fuck': function () {
 				return ['links1', '<a href="#">jQuery Selector Test</a>', $('<a href="#">22</a>')];
@@ -90,7 +90,7 @@
 			}
 		},
 
-		viewsEvents: {
+		events: {
 			'remove links1': ['yell', 'wrapper1.say', 'links1.sad'],
 			'remove links2': function () {
 				return ['yell', 'wrapper2.say', 'links2.sad'];
@@ -121,9 +121,9 @@
 		}
 	});
 
-	var App = Backbone.CompositeView.extend({
+	var App = Backbone.Composite.extend({
 
-		itemViews: {
+		items: {
 			'lc': function () {
 				return new LinkComposite;
 			},
@@ -132,9 +132,9 @@
 			}
 		},
 
-		nestViews: {},
+		nests: {},
 
-		viewsEvents: {
+		events: {
 			// Multiple triggerr multiple
 			// any view of lc.links2 trigger one 'remove' event 
 			// will invoke all buttons' remove method
@@ -149,8 +149,8 @@
 
 	new App();
 	var app = new App();
-	app.setSubView('lc2', new LinkComposite);
-	console.log(app.getSubView('lc2'));
-	app.delSubView('lc2');
-	console.log(app.getSubView('lc2'));
+	app.setItem('lc2', new LinkComposite);
+	console.log(app.getItem('lc2'));
+	app.deleteItem('lc2');
+	console.log(app.getItem('lc2'));
 })();
