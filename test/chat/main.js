@@ -122,29 +122,5 @@
 	chatComposite.prependChat(new ChatModel({
 		content: 'fuck you' + +new Date
 	}));
-
-var Box = Backbone.View.extend({
-    name: 'Hi',
-    sayName: function () {
-        this.trigger('nameSay', this.name);
-    }
-});
-
-var BoxWrapper = Backbone.Composite.extend({
-    items: {
-        'box': function () {
-            return new Box;
-        }
-    },
-    exportEvent: {
-        'box': ['nameSay']
-    }
-});
-
-var boxWrapper = new BoxWrapper;
-boxWrapper.on('nameSay', function (name) {
-    console.log('I have got ' + name + ' said');
-});
-boxWrapper.getItem('box').sayName(); // => I have got Hi said
-
+	
 })();
