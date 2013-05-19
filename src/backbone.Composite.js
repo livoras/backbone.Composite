@@ -1,10 +1,5 @@
 ;(function (Backbone, $) {
 
-	function _isArray (obj) {
-		return Object.prototype.toString.apply(obj) === '[object Array]';
-	}
-
-
 	// @param str {String} : A string like 'remove subview'
 	// @return {Object} : 
 	//		{
@@ -41,7 +36,7 @@
 					id = handler.slice(0, dot);
 					view = this.getItem(id);
 
-					if (_isArray(view)) {
+					if (_.isArray(view)) {
 
 						for (j = 0, len = view.length; j < len; j++) {
 							tpmView = view[j];
@@ -72,7 +67,7 @@
 	function _universalBinding (targets, name, handlers) {
 		var i, len; 
 
-		if (_isArray(targets)) {
+		if (_.isArray(targets)) {
 
 			for (i = 0, len = targets.length; i < len; i++) {
 				_singleBindWithArray.call(this, targets[i], name, handlers);
@@ -248,7 +243,7 @@
 
 				// If array, get its first element 
 				// We will nest all views to first view
-				if (_isArray(view)) {
+				if (_.isArray(view)) {
 					view = view[0];
 				} 
 
@@ -304,7 +299,7 @@
 					}
 
 					// You may attain an array from `getItem`
-					if (_isArray(view)) {
+					if (_.isArray(view)) {
 
 						for (i = 0, l = view.length; i < l; i++) {
 							$fragment = $fragment.add(view[i].$el);
@@ -372,7 +367,7 @@
 		for (var i = 0, len = events.length; i < len; i++) {
 			that = this;
 
-			function getRealCallBack(eventName) {
+			function getRealCallBack (eventName) {
 				return function () {
 					Array.prototype.unshift.call(arguments, eventName);
 					that.trigger.apply(that, arguments);
@@ -383,7 +378,32 @@
 		}
 	}
 
-	Backbone.Composite = Backbone.View.extend({
+	var Composite = Backbone.Composite = function (opt) {
+		// It spends my hold day to deal with this....  
+		//  use iv to cache the insitance's itemViews  
+		// itemViews belongs to prototye, so for every Composite
+		// we need to creat its own itemView, that is iv
+		this.iv = {};
+		this.ve = {};
+		this.nv = {};
+
+		// dirty code,
+		// I want to change the params' name, but it's difficult
+		// so I hold the old names inside, but export new names to clients
+		this.itemViews = this.items;
+		this.viewsEvents = this.events;
+		this.nestViews = this.nests;
+
+		_initItemViews.apply(this);
+		_bindEvents.apply(this);
+		_nestAll.apply(this);
+
+		this.initialize.apply(this, arguments);
+	}
+
+	_.extend(Composite.prototype, Backbone.Events, {
+
+		initialize: function () {},
 
 		items: {
 
@@ -421,28 +441,6 @@
 
 		exportEvent: {
 			// itemId: [event1, event2, event3]
-		},
-
-		constructor: function (opt) {
-			// It spends my hold day to deal with this....  
-			//  use iv to cache the insitance's itemViews  
-			// itemViews belongs to prototye, so for every Composite
-			// we need to creat its own itemView, that is iv
-			this.iv = {};
-			this.ve = {};
-			this.nv = {};
-
-			// dirty code,
-			// I want to change the params' name, but it's difficult
-			// so I hold the old names inside, but export new names to clients
-			this.itemViews = this.items;
-			this.viewsEvents = this.events;
-			this.nestViews = this.nests;
-
-			_initItemViews.apply(this);
-			_bindEvents.apply(this);
-			_nestAll.apply(this);
-			this.initialize();
 		},
 
 		// Set subview and its id
@@ -519,7 +517,7 @@
 				throw "subview not found";
 			} 
 
-			if (_isArray(views)) {
+			if (_.isArray(views)) {
 
 				views.push(view);
 				if (setting.bind) _dynamicBinding.call(this, id, view);
@@ -555,5 +553,7 @@
 		_exportEvent: _exportEvent
 
 	});
+
+	Composite.extend = Backbone.View.extend;
 
 })(Backbone, jQuery);

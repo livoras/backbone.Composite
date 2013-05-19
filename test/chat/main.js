@@ -111,8 +111,10 @@
 		_id: 'fuck'
 	});
 
+	console.log(chatComposite);
+
 	chatComposite.on('chatAppend', function (model) {
-		console.log(model);
+		console.log(model + 'fuck');
 	});
 
 	chatComposite.appendChat(new ChatModel({
@@ -122,5 +124,5 @@
 	chatComposite.prependChat(new ChatModel({
 		content: 'fuck you' + +new Date
 	}));
-	
+
 })();
