@@ -315,7 +315,7 @@ sv.setItem('specialView', new Sub);
 		},
 
 		initialize: function () {
-			this.getSubView('dogs')[0].park();
+			this.getItem('dogs')[0].park();
 		},
 
 		houseMessUp: function () {
@@ -518,7 +518,7 @@ options的有三个可以设置的属性：`nest`，`bind`，`listen`，都是`B
 		},
 
 		initialize: function () {
-			this.getSubView('dogs')[0].park();
+			this.getItem('dogs')[0].park();
 		},
 
 		houseMessUp: function () {
