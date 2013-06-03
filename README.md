@@ -472,24 +472,6 @@ app.getItem('house.dogs'); // => [dog, dog, dog]
 若视图存不存在，返回`null`
 
 * * *
-### setItem(itemId:String, view:Object)
-设置子视图，不支持`.`操作，也就说处于安全考虑，不可以让你设置后继子视图。
-```javascript
-var app = new App();
-app.setItem('anotherHouse', new House);
-```
-该方法会触发`get`和`get:itemId`事件，如果是添加本身不存在的视图同时会触发`add`事件。
-
-* * *
-### deleteItem(itemId:String)
-让你可以从实例中删除子视图，相应的DOM元素并不会删除。需要你手动删除。
-```javascript
-var app = new App();
-app.deleteItem('house');
-```
-该方法会触发`delete`和`delete:ItemId`事件
-
-* * *
 ### pushItem(itemId:String, view:Object [, options:Object])
 该方法可以往组合视图的数组形式子视图中添加元素，同时，你可以通过可选参数`options`来设置是否需要配置函数的行为。
 options的有三个可以设置的属性：`nest`，`bind`，`listen`，都是`Boolean`类型。实例用法（回忆我们`House`的例子）：
@@ -555,6 +537,33 @@ options的有三个可以设置的属性：`nest`，`bind`，`listen`，都是`B
 假如不传入参数`options`，那么前三个属性默认都为`true`，后面一个默认为`false`
 
 该方法会触发`push`，`push:itemId`事件
+
+* * *
+### setItem(itemId:String, view:Object [, options:Object])
+设置子视图，不支持`.`操作，也就说处于安全考虑，不可以让你设置后继子视图。
+```javascript
+var app = new App();
+app.setItem('anotherHouse', new House, {
+	nest: true,
+	bind: true,
+	listen: true,
+	remove: true
+});
+```
+该方法会触发`get`和`get:itemId`事件，如果是添加本身不存在的视图同时会触发`add`事件。
+参数 `nest`，`bind`，`listen`和 `pushItem` API含义相同，`remove` 参数用来设置是否把原来的item对应的DOM元素也一并删除。
+默认所有参数都为`true`
+* * *
+### deleteItem(itemId:String [,options:Object])
+让你可以从实例中删除子视图，相应的DOM元素并不会删除。需要你手动删除。
+```javascript
+var app = new App();
+app.deleteItem('house', {
+	remove: true
+});
+```
+该方法会触发`delete`和`delete:ItemId`事件
+接受一个参数 `remove`， 用来设置在删除item的时候是否把item对应的DOM元素也从DOM树中删除。
 
 ## Licence
 MIT
