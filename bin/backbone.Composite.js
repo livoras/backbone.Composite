@@ -49,7 +49,14 @@
 						handler = view[method];
 					}
 				}
+				
+			} else if (_.isObject(handler)) {
+				if (!_.isFunction(handler)) {
+					view = handler.context;
+					handler = handler.method;
+				}
 			}
+
 			callback('function', 'function', view, handler);
 		}
 	}
@@ -58,6 +65,7 @@
 	function _singleBindWithArray (target, name, handlers) {
 
 		_iterateHandlers.call(this, handlers, function (id, method, view, handler) {
+			view = view || window;	
 			target.on(name, handler, view);
 		});
 
@@ -106,7 +114,7 @@
 		for (method in listens) {
 			evt = listens[method].split(' ');
 			targets = this.getItem(evt[1]);
-			_universalBinding(targets, evt[0], [view[method]]);
+			_universalBinding(targets, evt[0], [{context: view, method: view[method]}]);
 		}
 	}
 
@@ -447,22 +455,54 @@
 		// It cannot set subview's subview
 		// You can chose to bind the events which already exists below the id's subview
 		// or not to by setting the optional `bind` argument to false 
-		setItem: function (id, view, bind) {
-			var	bind = bind || true;
+		setItem: function (id, view, opt) {
+
+			var setting = {
+
+				bind: true,
+				listen: true,
+				remove: true,
+
+				nest: true,
+				prepend: false
+			} 
+
+			_.extend(setting, opt);
 
 			this.trigger('set', id, view);
 			this.trigger('set:' + id, id, view);
 
+			if (setting.remove) {
+				_.each(this.iv[id], function (view) {
+					if(view && view.remove) {
+						view.remove();
+					}
+				})
+			}
+
 			if (!this.iv[id]) {
-				this.iv[id] = view; 
 				this.trigger('add', id, view);
 				this.trigger('add:' + id, id, view);
-				return ;
 			}   
 
-			if (bind) {
-				_dynamicBinding.call(this, id, view);
+
+			if(_.isArray(view)) {
+				var views = view;
+				var that = this; 
+
+				this.iv[id] = [];
+
+				_.each(views, function (view) {
+					that.pushItem(id, view);
+				})
+
+			} else {
+				this.iv[id] = view; 
+				if (setting.bind) _dynamicBinding.call(this, id, view);
+				if (setting.listen) _dynamicListening.call(this, id, view);
+				if (setting.nest) _dynamicNesting.call(this, id, view, setting.prepend);
 			}
+
 		},
 
 		// getItem('subviewId.subviewId.subviewId') to get child view 
@@ -534,13 +574,30 @@
 
 		// removeSubView by id, 
 		// But for safety, you cannot remove subview's subview 
-		deleteItem: function (id) {
+		deleteItem: function (id, opt) {
+
+			var setting = {
+				remove: true
+			};
+
+			_.extend(setting, opt)
+
 			if (this.iv[id]) {
+
+				if (setting.remove) {
+					_.each(this.iv[id], function (view) {
+						if(view && view.remove) {
+							view.remove();
+						}
+					})
+				}
+
 				delete this.iv[id];
 				if (this.ve[id]) delete this.ve[id];
 				this.trigger('delete');
 				this.trigger('delete:' + id);
 				return true;
+
 			} else {
 				return false;
 			}
@@ -556,4 +613,4 @@
 
 	Composite.extend = Backbone.View.extend;
 
-})(Backbone, jQuery);
+})(Backbone, jQuery);	

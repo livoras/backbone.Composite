@@ -42,7 +42,7 @@
 		model: ChatModel, 
 		appendChat: function (model) {
 			this.push(model);
-			this.trigger('chatAppend', model);
+			this.trigger('chatAppend', model, 'fuckyou');
 		},
 		prependChat: function (model) {
 			this.unshift(model);
@@ -113,11 +113,13 @@
 
 	console.log(chatComposite);
 
-	chatComposite.on('chatAppend', function (model) {
-		console.log(model + 'fuck');
+	chatComposite.on('chatAppend', function (model, name) {
+		console.log(model.toJSON());
+		console.log(model.id);
 	});
 
 	chatComposite.appendChat(new ChatModel({
+		_id: '13434',
 		content: 'fuck you shit'
 	}));
 

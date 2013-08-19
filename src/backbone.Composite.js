@@ -49,7 +49,14 @@
 						handler = view[method];
 					}
 				}
+				
+			} else if (_.isObject(handler)) {
+				if (!_.isFunction(handler)) {
+					view = handler.context;
+					handler = handler.method;
+				}
 			}
+
 			callback('function', 'function', view, handler);
 		}
 	}
@@ -58,6 +65,7 @@
 	function _singleBindWithArray (target, name, handlers) {
 
 		_iterateHandlers.call(this, handlers, function (id, method, view, handler) {
+			view = view || window;	
 			target.on(name, handler, view);
 		});
 
@@ -106,7 +114,7 @@
 		for (method in listens) {
 			evt = listens[method].split(' ');
 			targets = this.getItem(evt[1]);
-			_universalBinding(targets, evt[0], [view[method]]);
+			_universalBinding(targets, evt[0], [{context: view, method: view[method]}]);
 		}
 	}
 
@@ -556,4 +564,4 @@
 
 	Composite.extend = Backbone.View.extend;
 
-})(Backbone, jQuery);
+})(Backbone, jQuery);	
